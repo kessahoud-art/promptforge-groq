@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptForge AI — Générateur de Prompts Viral</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --s1: #111118;
+  --s2: #18181f;
+  --s3: #22222c;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #e8ff47;
+  --accent-dim: rgba(232,255,71,0.1);
+  --accent-glow: rgba(232,255,71,0.18);
+  --text: #f0f0f5;
+  --muted: #6b6b7a;
+  --muted2: #9999aa;
+  --green: #4ade80;
+  --blue: #60a5fa;
+  --pink: #f472b6;
+  --orange: #fb923c;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Instrument Sans',sans-serif;
+  font-size:15px;line-height:1.6;overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.5;
+}
+.bg-glow{
+  position:fixed;width:800px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,255,71,0.035) 0%,transparent 70%);
+  top:-150px;left:50%;transform:translateX(-50%);
+  pointer-events:none;z-index:0;
+}
+
+/* NAV */
+nav{
+  padding:17px 0;border-bottom:1px solid var(--border);
+  position:sticky;top:0;
+  background:rgba(10,10,15,0.92);
+  backdrop-filter:blur(20px);z-index:100;
+}
+.nav-inner{
+  max-width:1080px;margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-weight:900;font-size:20px;color:var(--accent);
+  display:flex;align-items:center;gap:8px;
+}
+.logo-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--accent);
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-badge{
+  font-size:11px;font-weight:500;color:var(--muted2);
+  border:1px solid var(--border2);padding:5px 12px;border-radius:100px;
+}
+.api-status{
+  font-size:11px;font-weight:600;
+  padding:5px 12px;border-radius:100px;
+  border:1px solid;display:flex;align-items:center;gap:5px;
+}
+.api-status.ok{color:var(--green);border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.06);}
+.api-status.err{color:var(--orange);border-color:rgba(251,146,60,.25);background:rgba(251,146,60,.06);}
+.api-status.wait{color:var(--muted2);border-color:var(--border2);background:transparent;}
+
+/* WRAP */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px;position:relative;z-index:1;}
+
+/* HERO */
+.hero{padding:64px 0 48px;text-align:center;}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--accent-dim);border:1px solid rgba(232,255,71,.2);
+  color:var(--accent);padding:5px 14px;border-radius:100px;
+  font-size:12px;font-weight:500;letter-spacing:.3px;
+  margin-bottom:22px;animation:up .5s ease both;
+}
+h1{
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-weight:900;font-size:clamp(38px,6vw,72px);
+  line-height:.97;letter-spacing:-3px;
+  animation:up .5s ease .08s both;
+}
+h1 .hi{color:var(--accent);text-shadow:0 0 60px rgba(232,255,71,.25);}
+.hero-p{
+  color:var(--muted2);font-size:16px;max-width:480px;
+  margin:18px auto 0;animation:up .5s ease .16s both;
+}
+@keyframes up{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* TABS */
+.tabs{
+  display:flex;gap:2px;background:var(--s1);
+  border:1px solid var(--border);border-radius:12px;
+  padding:3px;width:fit-content;margin:36px auto 32px;
+  animation:up .5s ease .22s both;
+}
+.tab{
+  padding:9px 20px;border-radius:9px;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:14px;font-weight:700;border:none;
+  background:transparent;color:var(--muted);
+  cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+.tab.on{background:var(--s3);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.5);}
+.tab:hover:not(.on){color:var(--text);}
+
+/* PANELS */
+.panel{display:none;}
+.panel.on{display:block;animation:up .35s ease both;}
+
+/* CARD */
+.card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:16px;padding:26px;margin-bottom:22px;
+  transition:border-color .25s;
+}
+.card:focus-within{border-color:rgba(232,255,71,.22);}
+.label{
+  font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:11px;display:block;
+}
+
+/* INPUTS */
+textarea,input[type=text]{
+  width:100%;background:var(--s2);
+  border:1px solid var(--border);border-radius:10px;
+  padding:13px 15px;color:var(--text);
+  font-family:'Instrument Sans',sans-serif;font-size:15px;
+  outline:none;transition:border-color .2s;
+}
+textarea{resize:vertical;min-height:88px;}
+input[type=text]{resize:none;}
+textarea:focus,input:focus{border-color:rgba(232,255,71,.4);}
+textarea::placeholder,input::placeholder{color:var(--muted);}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px;}
+select{
+  flex:1;min-width:148px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 34px 11px 13px;
+  color:var(--text);font-family:'Instrument Sans',sans-serif;
+  font-size:14px;outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%236b6b7a' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  transition:border-color .2s;
+}
+select:focus{border-color:rgba(232,255,71,.4);}
+select option{background:var(--s2);}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:12px 22px;border-radius:10px;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:14px;font-weight:700;border:none;
+  cursor:pointer;transition:all .18s;
+}
+.btn-primary{background:var(--accent);color:#0a0a0f;}
+.btn-primary:hover{background:#f0ff6e;box-shadow:0 4px 20px var(--accent-glow);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted2);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:7px;}
+
+/* TOOL BAR */
+.tool-bar{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;margin-bottom:18px;
+}
+.tool-bar-label{
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px;
+}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 13px;background:var(--s2);
+  border:1px solid var(--border);border-radius:8px;
+  font-size:13px;font-weight:500;color:var(--text);
+  text-decoration:none;transition:all .15s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.02);}
+.chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* PROMPT GRID */
+.pgrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:13px;
+}
+.p-card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  position:relative;overflow:hidden;
+  transition:all .2s;animation:up .35s ease both;
+}
+.p-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.p-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.p-card:hover::after{opacity:.5;}
+.p-type{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.p-text{font-size:14px;color:var(--text);line-height:1.65;margin-bottom:12px;white-space:pre-wrap;word-break:break-word;}
+.p-usage{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.p-actions{display:flex;gap:7px;flex-wrap:wrap;}
+
+/* PACKS */
+.packs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.pk-card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:22px;cursor:pointer;
+  transition:all .2s;animation:up .35s ease both;
+  position:relative;overflow:hidden;
+}
+.pk-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at top left,rgba(232,255,71,.04),transparent 60%);
+  opacity:0;transition:opacity .25s;
+}
+.pk-card:hover{border-color:rgba(232,255,71,.25);transform:translateY(-3px);}
+.pk-card:hover::before{opacity:1;}
+.pk-icon{font-size:24px;margin-bottom:10px;}
+.pk-name{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:15px;margin-bottom:5px;}
+.pk-desc{color:var(--muted2);font-size:13px;line-height:1.5;margin-bottom:13px;}
+.pk-count{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);}
+
+/* TOOLS */
+.t-section{margin-bottom:26px;}
+.t-section-title{
+  font-family:'Cabinet Grotesk',sans-serif;font-weight:800;
+  font-size:14px;color:var(--accent);
+  margin-bottom:13px;display:flex;align-items:center;gap:8px;
+}
+.t-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent);}
+.t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px;}
+.t-card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:11px;padding:14px;
+  text-decoration:none;color:var(--text);
+  transition:all .18s;display:flex;align-items:center;gap:11px;
+}
+.t-card:hover{border-color:var(--border2);background:var(--s2);transform:translateY(-2px);}
+.t-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.t-name{font-weight:600;font-size:13px;}
+.t-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+.t-arr{margin-left:auto;color:var(--muted);font-size:11px;}
+
+/* MODAL */
+#overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.78);
+  backdrop-filter:blur(12px);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+#overlay.on{display:flex;}
+.modal{
+  background:var(--s1);border:1px solid var(--border2);
+  border-radius:18px;max-width:680px;width:100%;
+  max-height:88vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  animation:up .3s ease both;
+}
+.modal-top{
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-title{font-family:'Cabinet Grotesk',sans-serif;font-weight:800;font-size:17px;}
+.modal-x{
+  width:30px;height:30px;border-radius:7px;
+  background:var(--s2);border:1px solid var(--border);
+  color:var(--muted2);cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.modal-x:hover{color:var(--text);}
+.modal-body{padding:22px;overflow-y:auto;flex:1;}
+.modal-body::-webkit-scrollbar{width:3px;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+.m-prompt{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-bottom:10px;
+}
+.m-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:7px;}
+.m-text{font-size:13px;line-height:1.65;white-space:pre-wrap;word-break:break-word;}
+.modal-foot{
+  padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;gap:10px;justify-content:flex-end;
+}
+
+/* LOADING & STATES */
+.loading{display:flex;align-items:center;gap:10px;padding:48px;justify-content:center;color:var(--muted);font-size:14px;}
+.spin{width:18px;height:18px;border:2px solid var(--s3);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.err-box{
+  background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.2);
+  border-radius:12px;padding:18px;color:var(--orange);
+  font-size:14px;line-height:1.7;margin-bottom:18px;
+}
+.err-box code{
+  background:rgba(251,146,60,.1);padding:2px 6px;border-radius:4px;font-size:12px;
+}
+
+/* STATS */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;margin:32px 0;
+}
+.stat{background:var(--s1);padding:20px;text-align:center;}
+.stat-n{font-family:'Cabinet Grotesk',sans-serif;font-weight:900;font-size:28px;color:var(--accent);letter-spacing:-1px;}
+.stat-l{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:var(--s3);border:1px solid var(--border2);
+  color:var(--text);padding:10px 22px;
+  border-radius:100px;font-size:13px;font-weight:500;
+  opacity:0;transition:all .25s;pointer-events:none;
+  z-index:9998;white-space:nowrap;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:600px){
+  .pgrid,.packs-grid,.t-grid{grid-template-columns:1fr;}
+  h1{letter-spacing:-1.5px;}
+  .tabs{width:100%;overflow-x:auto;}
+}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-dot"></div>PromptForge</div>
+    <div class="nav-right">
+      <div id="api-indicator" class="api-status wait">● Prêt</div>
+      <div class="nav-badge">Illimité · Zéro inscription</div>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="pill">⚡ Propulsé par Claude AI · Génération réelle</div>
+    <h1>Chaque idée devient<br><span class="hi">un prompt parfait</span></h1>
+    <p class="hero-p">L'IA génère des prompts sur mesure, adaptés à ton idée exacte — en secondes, dans ta langue.</p>
+    <div class="tabs">
+      <button class="tab on" onclick="goTab('gen',this)">⚡ Générateur</button>
+      <button class="tab" onclick="goTab('packs',this)">📦 Packs</button>
+      <button class="tab" onclick="goTab('tools',this)">🔗 Outils IA</button>
+    </div>
+  </section>
+
+  <!-- ══ GÉNÉRATEUR ══ -->
+  <div id="p-gen" class="panel on">
+    <div class="card">
+      <label class="label">💡 Ton idée ou objectif</label>
+      <textarea id="idea" placeholder="Ex : Je veux créer du contenu TikTok pour vendre ma formation perte de poids…&#10;Ex : Faire des pubs Facebook pour mon coaching business en ligne…&#10;Ex : Générer des images IA pour ma boutique Etsy bijoux luxe…&#10;Ex : I want to create Instagram content for my fitness brand…"></textarea>
+      <div class="row">
+        <select id="platform">
+          <option value="">📱 Plateforme…</option>
+          <option>TikTok</option>
+          <option>Instagram Reels</option>
+          <option>YouTube Shorts</option>
+          <option>Facebook</option>
+          <option>Facebook Ads</option>
+          <option>LinkedIn</option>
+          <option>Blog / SEO</option>
+          <option>Email Marketing</option>
+          <option>WhatsApp</option>
+          <option>Pinterest</option>
+        </select>
+        <select id="tone">
+          <option value="">🎭 Ton…</option>
+          <option>Viral & Accrocheur</option>
+          <option>Professionnel</option>
+          <option>Humoristique</option>
+          <option>Éducatif</option>
+          <option>Storytelling émotionnel</option>
+          <option>Persuasif / Vente</option>
+          <option>Inspirant & Motivant</option>
+          <option>Luxe & Premium</option>
+          <option>Minimaliste</option>
+        </select>
+        <select id="otype">
+          <option value="">📝 Type de contenu…</option>
+          <option>Texte / Caption</option>
+          <option>Script Vidéo</option>
+          <option>Prompt Image IA</option>
+          <option>Prompt Vidéo IA</option>
+          <option>Accroche Publicitaire</option>
+          <option>Email de Vente</option>
+          <option>Description Produit</option>
+          <option>Thread / Fil de posts</option>
+        </select>
+      </div>
+      <div class="row" style="margin-top:18px;">
+        <button class="btn btn-primary" id="genbtn" onclick="generate()">
+          <span id="gi">✨</span>
+          <span id="gt">Générer mes prompts</span>
+        </button>
+        <button class="btn btn-ghost" onclick="clearGen()">Effacer</button>
+      </div>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <!-- ══ PACKS ══ -->
+  <div id="p-packs" class="panel">
+    <div class="card" style="margin-bottom:22px;">
+      <label class="label">🎯 Génère un pack personnalisé</label>
+      <input type="text" id="ptopic" placeholder="Ex : Pack 20 prompts TikTok fitness, pack scripts YouTube tech, pack captions Instagram mode…">
+      <div class="row" style="margin-top:15px;">
+        <button class="btn btn-primary" onclick="makePack()">📦 Générer mon pack</button>
+      </div>
+    </div>
+    <label class="label" style="display:block;margin-bottom:13px;">🔥 Packs Prêts à l'emploi</label>
+    <div class="packs-grid" id="pgrid"></div>
+  </div>
+
+  <!-- ══ OUTILS ══ -->
+  <div id="p-tools" class="panel">
+    <div class="t-section">
+      <div class="t-section-title">🎨 Génération d'Images</div>
+      <div class="t-grid">
+        <a href="https://chat.openai.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(16,185,129,.1);">🖼️</div><div><div class="t-name">DALL·E</div><div class="t-desc">via ChatGPT</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.midjourney.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(124,58,237,.1);">🎭</div><div><div class="t-name">Midjourney</div><div class="t-desc">Qualité premium</div></div><div class="t-arr">↗</div></a>
+        <a href="https://ideogram.ai" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(245,158,11,.1);">✍️</div><div><div class="t-name">Ideogram</div><div class="t-desc">Texte dans images</div></div><div class="t-arr">↗</div></a>
+        <a href="https://leonardo.ai" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(239,68,68,.1);">🎨</div><div><div class="t-name">Leonardo AI</div><div class="t-desc">Gratuit & puissant</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.adobe.com/products/firefly.html" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(255,107,43,.1);">🔥</div><div><div class="t-name">Adobe Firefly</div><div class="t-desc">Usage commercial</div></div><div class="t-arr">↗</div></a>
+      </div>
+    </div>
+    <div class="t-section">
+      <div class="t-section-title">🎬 Génération de Vidéos</div>
+      <div class="t-grid">
+        <a href="https://labs.google/flow" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(66,133,244,.1);">🌊</div><div><div class="t-name">Google Flow</div><div class="t-desc">Veo 2</div></div><div class="t-arr">↗</div></a>
+        <a href="https://runwayml.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(255,107,43,.1);">🛫</div><div><div class="t-name">Runway ML</div><div class="t-desc">Gen-3 Alpha</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.kling.ai" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(168,85,247,.1);">⚡</div><div><div class="t-name">Kling AI</div><div class="t-desc">Réaliste & rapide</div></div><div class="t-arr">↗</div></a>
+        <a href="https://sora.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(244,63,94,.1);">🌀</div><div><div class="t-name">Sora</div><div class="t-desc">OpenAI</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.heygen.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(6,182,212,.1);">🧑‍💼</div><div><div class="t-name">HeyGen</div><div class="t-desc">Avatar IA</div></div><div class="t-arr">↗</div></a>
+        <a href="https://vids.google.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(52,168,83,.1);">📹</div><div><div class="t-name">Google Vids</div><div class="t-desc">Vidéos pro</div></div><div class="t-arr">↗</div></a>
+      </div>
+    </div>
+    <div class="t-section">
+      <div class="t-section-title">✍️ Rédaction & IA</div>
+      <div class="t-grid">
+        <a href="https://claude.ai" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(232,255,71,.1);">🤖</div><div><div class="t-name">Claude AI</div><div class="t-desc">Rédaction avancée</div></div><div class="t-arr">↗</div></a>
+        <a href="https://chat.openai.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(16,185,129,.1);">💬</div><div><div class="t-name">ChatGPT</div><div class="t-desc">GPT-4o</div></div><div class="t-arr">↗</div></a>
+        <a href="https://gemini.google.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(66,133,244,.1);">💎</div><div><div class="t-name">Gemini</div><div class="t-desc">Google AI</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.copy.ai" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(245,158,11,.1);">📋</div><div><div class="t-name">Copy.ai</div><div class="t-desc">Marketing copy</div></div><div class="t-arr">↗</div></a>
+      </div>
+    </div>
+    <div class="t-section">
+      <div class="t-section-title">📣 Publicité & Social</div>
+      <div class="t-grid">
+        <a href="https://business.facebook.com/adsmanager" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(24,119,242,.1);">📢</div><div><div class="t-name">Facebook Ads</div><div class="t-desc">Ads Manager</div></div><div class="t-arr">↗</div></a>
+        <a href="https://ads.tiktok.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(254,44,85,.1);">🎵</div><div><div class="t-name">TikTok Ads</div><div class="t-desc">Trafic viral</div></div><div class="t-arr">↗</div></a>
+        <a href="https://canva.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(125,42,232,.1);">🖌️</div><div><div class="t-name">Canva</div><div class="t-desc">Design rapide</div></div><div class="t-arr">↗</div></a>
+        <a href="https://www.capcut.com" target="_blank" class="t-card"><div class="t-icon" style="background:rgba(16,185,129,.1);">✂️</div><div><div class="t-name">CapCut</div><div class="t-desc">Montage vidéo</div></div><div class="t-arr">↗</div></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="sc">0</div><div class="stat-l">Prompts générés</div></div>
+    <div class="stat"><div class="stat-n">15+</div><div class="stat-l">Outils intégrés</div></div>
+    <div class="stat"><div class="stat-n">∞</div><div class="stat-l">Générations</div></div>
+    <div class="stat"><div class="stat-n">100%</div><div class="stat-l">IA réelle</div></div>
+  </div>
+
+</div>
+</main>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL PACK -->
+<div id="overlay" onclick="if(event.target===this)closeMod()">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="modal-title" id="mtitle">Pack de Prompts</div>
+      <button class="modal-x" onclick="closeMod()">✕</button>
+    </div>
+    <div class="modal-body" id="mbody">
+      <div class="loading"><div class="spin"></div> Génération en cours…</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="dlbtn" onclick="dlPack()" style="display:none;">⬇ Télécharger .txt</button>
+      <button class="btn btn-primary" onclick="closeMod()">✅ Utiliser ces prompts</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ENDPOINT — pointe vers la fonction Vercel
+// ══════════════════════════════════════════════
+const ENDPOINT = "/api/claude";
+const MODEL    = "claude-sonnet-4-20250514";
+
+let totalCount = 0;
+let currentPack = null;
+
+// TOOLS MAP
+const TOOLS_BY_TYPE = {
+  "Texte / Caption":       [{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"},{n:"ChatGPT",u:"https://chat.openai.com",c:"#4ade80"},{n:"Copy.ai",u:"https://www.copy.ai",c:"#fb923c"}],
+  "Script Vidéo":          [{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"},{n:"ChatGPT",u:"https://chat.openai.com",c:"#4ade80"}],
+  "Prompt Image IA":       [{n:"DALL·E",u:"https://chat.openai.com",c:"#4ade80"},{n:"Midjourney",u:"https://www.midjourney.com",c:"#a78bfa"},{n:"Leonardo AI",u:"https://leonardo.ai",c:"#f87171"},{n:"Ideogram",u:"https://ideogram.ai",c:"#fb923c"}],
+  "Prompt Vidéo IA":       [{n:"Google Flow",u:"https://labs.google/flow",c:"#60a5fa"},{n:"Runway ML",u:"https://runwayml.com",c:"#fb923c"},{n:"Kling AI",u:"https://www.kling.ai",c:"#c084fc"},{n:"Sora",u:"https://sora.com",c:"#f472b6"}],
+  "Accroche Publicitaire": [{n:"Ads Manager",u:"https://business.facebook.com",c:"#60a5fa"},{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"}],
+  "Email de Vente":        [{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"},{n:"ChatGPT",u:"https://chat.openai.com",c:"#4ade80"}],
+  "Description Produit":   [{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"},{n:"ChatGPT",u:"https://chat.openai.com",c:"#4ade80"}],
+  "Thread / Fil de posts": [{n:"Claude AI",u:"https://claude.ai",c:"#e8ff47"},{n:"LinkedIn",u:"https://linkedin.com",c:"#60a5fa"}],
+};
+
+const PACKS = [
+  {icon:"🎵",name:"TikTok Viral",desc:"Hooks, scripts et captions ultra-accrocheurs pour TikTok",niche:"TikTok viral hooks scripts"},
+  {icon:"💼",name:"LinkedIn Pro",desc:"Posts qui génèrent visibilité et leads B2B",niche:"LinkedIn B2B posts professionnels"},
+  {icon:"📣",name:"Facebook Ads",desc:"Accroches et scripts publicitaires haute conversion",niche:"Facebook Ads publicité haute conversion"},
+  {icon:"🎨",name:"Image AI",desc:"Prompts optimisés pour DALL·E, Midjourney, Leonardo",niche:"génération images IA DALL-E Midjourney"},
+  {icon:"🎬",name:"Script Vidéo",desc:"Scripts complets pour Reels, Shorts et vidéos ads",niche:"scripts vidéo courts viraux Reels Shorts"},
+  {icon:"💰",name:"Email Marketing",desc:"Templates email de vente et séquences automatiques",niche:"email marketing vente séquences"},
+];
+
+// TABS
+function goTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ── APPEL API via Netlify Function ──
+async function callClaude(systemPrompt, userMsg) {
+  const resp = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMsg }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(()=>({}));
+    throw new Error(err.error?.message || `Erreur HTTP ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return (data.content?.[0]?.text || "").replace(/```json|```/g,"").trim();
+}
+
+// ── GENERATE ──
+async function generate() {
+  const idea = document.getElementById('idea').value.trim();
+  if (!idea) { toast('⚠️ Entre ton idée !'); return; }
+
+  const platform = document.getElementById('platform').value || 'toutes plateformes';
+  const tone     = document.getElementById('tone').value     || 'viral et accrocheur';
+  const otype    = document.getElementById('otype').value    || 'Texte / Caption';
+
+  setLoading(true);
+  document.getElementById('results').innerHTML =
+    `<div class="loading"><div class="spin"></div> L'IA analyse ton idée et génère des prompts sur mesure…</div>`;
+
+  const system = `Tu es un expert mondial en copywriting viral et génération de prompts IA.
+
+MISSION : Générer exactement 4 prompts professionnels, ultra-personnalisés et directement utilisables.
+
+RÈGLES ABSOLUES :
+1. Chaque prompt doit coller parfaitement à l'idée exacte de l'utilisateur — JAMAIS générique
+2. Les prompts doivent être IMMÉDIATEMENT utilisables (copier-coller dans un outil IA)
+3. Détecte la langue de l'idée → génère dans CETTE MÊME LANGUE
+4. Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte avant/après
+5. Chaque prompt : minimum 4-6 phrases riches et actionnables
+
+FORMAT JSON :
+{
+  "prompts": [
+    {"type":"Prompt Principal","color":"#e8ff47","text":"...","usage":"..."},
+    {"type":"Variante Créative","color":"#4ade80","text":"...","usage":"..."},
+    {"type":"Version Courte","color":"#60a5fa","text":"...","usage":"..."},
+    {"type":"Prompt Avancé","color":"#f472b6","text":"...","usage":"..."}
+  ]
+}`;
+
+  const user = `Idée : ${idea}
+Plateforme : ${platform}
+Ton : ${tone}
+Type de contenu : ${otype}
+
+Génère 4 prompts parfaitement adaptés à cette idée spécifique.`;
+
+  try {
+    const raw = await callClaude(system, user);
+    const parsed = JSON.parse(raw);
+    setApiOk(true);
+    totalCount += parsed.prompts.length;
+    animCount('sc', totalCount);
+    renderResults(parsed.prompts, otype);
+  } catch(e) {
+    setApiOk(false);
+    document.getElementById('results').innerHTML =
+      `<div class="err-box">
+        ⚠️ <strong>Erreur :</strong> ${esc(e.message)}<br><br>
+        Vérifie que la variable <code>GEMINI_API_KEY</code> est bien configurée dans<br>
+        <strong>Vercel → Settings → Environment Variables</strong>
+      </div>`;
+  }
+
+  setLoading(false);
+}
+
+function renderResults(prompts, otype) {
+  const tools = TOOLS_BY_TYPE[otype] || TOOLS_BY_TYPE["Texte / Caption"];
+  let html = `<div>
+    <div class="tool-bar">
+      <div class="tool-bar-label">🚀 Copie un prompt puis ouvre directement dans…</div>
+      <div class="chips">
+        ${tools.map(t=>`<a href="${t.u}" target="_blank" class="chip"><div class="chip-dot" style="background:${t.c}"></div>${t.n} ↗</a>`).join('')}
+      </div>
+    </div>
+    <div class="pgrid">`;
+
+  prompts.forEach((p, i) => {
+    html += `
+      <div class="p-card" style="animation-delay:${i*0.08}s">
+        <div class="p-type" style="color:${p.color||'#e8ff47'}">${esc(p.type)}</div>
+        <div class="p-text">${esc(p.text)}</div>
+        <div class="p-usage">💡 ${esc(p.usage||'')}</div>
+        <div class="p-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copyText(this,\`${escJ(p.text)}\`)">📋 Copier</button>
+          <a href="${tools[0].u}" target="_blank" class="btn btn-ghost btn-sm"
+             onclick="copyText(null,\`${escJ(p.text)}\`)">→ ${tools[0].n}</a>
+        </div>
+      </div>`;
+  });
+
+  html += `</div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-ghost" onclick="goTab('packs',document.querySelectorAll('.tab')[1])">
+        📦 Créer un pack téléchargeable
+      </button>
+    </div>
+  </div>`;
+
+  document.getElementById('results').innerHTML = html;
+}
+
+// ── PACKS ──
+function renderPackCards() {
+  document.getElementById('pgrid').innerHTML = PACKS.map((p,i)=>`
+    <div class="pk-card" onclick="openPresetPack(${i})" style="animation-delay:${i*0.06}s">
+      <div class="pk-icon">${p.icon}</div>
+      <div class="pk-name">${p.name}</div>
+      <div class="pk-desc">${p.desc}</div>
+      <div class="pk-count">→ Générer ce pack via IA</div>
+    </div>`).join('');
+}
+
+function openPresetPack(i) {
+  const p = PACKS[i];
+  generatePackFromAPI(`${p.icon} ${p.name}`, p.niche);
+}
+
+async function makePack() {
+  const topic = document.getElementById('ptopic').value.trim();
+  if (!topic) { toast('⚠️ Indique un sujet !'); return; }
+  generatePackFromAPI('✨ Pack Personnalisé', topic);
+}
+
+async function generatePackFromAPI(title, topic) {
+  document.getElementById('mtitle').textContent = title;
+  document.getElementById('mbody').innerHTML =
+    `<div class="loading"><div class="spin"></div> L'IA génère ton pack…</div>`;
+  document.getElementById('dlbtn').style.display = 'none';
+  document.getElementById('overlay').classList.add('on');
+
+  const system = `Tu es un expert en création de packs de prompts professionnels.
+Détecte la langue du sujet → génère les prompts dans cette même langue.
+Génère exactement 8 prompts variés, détaillés et directement utilisables.
+Réponds UNIQUEMENT en JSON valide sans markdown :
+{
+  "prompts": [
+    {"label":"Hook & Accroche","text":"..."},
+    {"label":"Storytelling","text":"..."},
+    {"label":"Contenu Éducatif","text":"..."},
+    {"label":"Format Viral","text":"..."},
+    {"label":"Prompt Image IA","text":"..."},
+    {"label":"Script Vidéo","text":"..."},
+    {"label":"Accroche Pub","text":"..."},
+    {"label":"CTA & Vente","text":"..."}
+  ]
+}
+Chaque prompt : spécifique au sujet, riche, min 4 phrases, immédiatement utilisable.`;
+
+  try {
+    const raw = await callClaude(system, `Sujet du pack : ${topic}`);
+    const parsed = JSON.parse(raw);
+    currentPack = { name: title, topic, prompts: parsed.prompts };
+    renderModalContent(parsed.prompts);
+    setApiOk(true);
+  } catch(e) {
+    document.getElementById('mbody').innerHTML =
+      `<div class="err-box">⚠️ ${esc(e.message)}</div>`;
+    setApiOk(false);
+  }
+}
+
+function renderModalContent(prompts) {
+  document.getElementById('mbody').innerHTML = prompts.map(p=>`
+    <div class="m-prompt">
+      <div class="m-label">${esc(p.label)}</div>
+      <div class="m-text">${esc(p.text)}</div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="copyText(this,\`${escJ(p.text)}\`)">📋 Copier</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('dlbtn').style.display = 'inline-flex';
+}
+
+function closeMod() { document.getElementById('overlay').classList.remove('on'); }
+
+function dlPack() {
+  if (!currentPack) return;
+  const txt = currentPack.prompts.map(p=>`${p.label}\n${'-'.repeat(60)}\n${p.text}\n`).join('\n');
+  const full = `${currentPack.name}\nSujet : ${currentPack.topic}\nGénéré par PromptForge AI\n${'='.repeat(60)}\n\n${txt}`;
+  const blob = new Blob([full],{type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `promptforge-${currentPack.topic.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase().slice(0,40)}.txt`;
+  a.click();
+  toast('✅ Pack téléchargé !');
+}
+
+// ── UTILS ──
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text)
+    .then(()=>{
+      if(btn){const o=btn.textContent;btn.textContent='✅ Copié !';setTimeout(()=>btn.textContent=o,1800);}
+      toast('✅ Prompt copié !');
+    })
+    .catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      toast('✅ Copié !');
+    });
+}
+
+function clearGen() {
+  document.getElementById('idea').value='';
+  document.getElementById('results').innerHTML='';
+}
+
+function setLoading(on) {
+  const btn=document.getElementById('genbtn');
+  const gi=document.getElementById('gi');
+  const gt=document.getElementById('gt');
+  if(on){
+    gi.innerHTML='<div class="spin" style="width:14px;height:14px;border-width:2px;"></div>';
+    gt.textContent='Génération…';btn.disabled=true;
+  } else {
+    gi.textContent='✨';gt.textContent='Générer mes prompts';btn.disabled=false;
+  }
+}
+
+function setApiOk(ok) {
+  const el=document.getElementById('api-indicator');
+  el.className='api-status '+(ok?'ok':'err');
+  el.textContent=ok?'● API Active':'⚠ Erreur API';
+}
+
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2600);
+}
+
+function animCount(id,target) {
+  const el=document.getElementById(id);
+  let cur=parseInt(el.textContent)||0;
+  const step=Math.max(1,Math.ceil((target-cur)/20));
+  const iv=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur;if(cur>=target)clearInterval(iv);},40);
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJ(s){return String(s).replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
+
+document.addEventListener('DOMContentLoaded', renderPackCards);
+</script>
+</body>
+</html>
